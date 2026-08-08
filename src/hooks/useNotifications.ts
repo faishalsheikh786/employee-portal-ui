@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { appConfig } from '../config'
 import type { RealtimeNotification } from '../types'
+import { fetchAuthSession } from 'aws-amplify/auth'
 
 export function useNotifications(employeeId?: number) {
   const [latest, setLatest] = useState<RealtimeNotification | null>(null)
@@ -10,14 +11,45 @@ export function useNotifications(employeeId?: number) {
     if (!employeeId) return
 
     const socket = new WebSocket(`${appConfig.wsBase}/notifications/${employeeId}`)
-    socket.onopen = () => setConnected(true)
+    socket.onopen = async () => {
+      try {
+        const session = await fetchAuthSession()
+
+        const token =
+          session.tokens?.accessToken?.toString()
+
+        if (!token) {
+          socket.close()
+          return
+        }
+
+        socket.send(
+          JSON.stringify({
+            type: 'AUTH',
+            access_token: token,
+          }),
+        )
+      } catch {
+        socket.close()
+      }
+    }
     socket.onclose = () => setConnected(false)
     socket.onerror = () => setConnected(false)
     socket.onmessage = (event) => {
       try {
-        setLatest(JSON.parse(event.data) as RealtimeNotification)
+        const payload = JSON.parse(event.data)
+
+        if (payload.type === 'AUTH_OK') {
+          setConnected(true)
+          return
+        }
+
+        setLatest(payload)
       } catch {
-        setLatest({ type: 'MESSAGE', message: String(event.data) })
+        setLatest({
+          type: 'MESSAGE',
+          message: String(event.data),
+        })
       }
     }
 
