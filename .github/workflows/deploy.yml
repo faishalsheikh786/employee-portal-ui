@@ -1,49 +1,59 @@
-name: Deploy React frontend
+name: Deploy Employee Portal UI
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: read
   id-token: write
 
-env:
-  AWS_REGION: us-east-1
-
 jobs:
-  deploy:
-    if: github.ref == 'refs/heads/main'
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
 
-      - name: Build production bundle
+      - name: Type check and build
         env:
           VITE_DIRECTORY_API_BASE_URL: /api/directory
           VITE_WORKFLOW_API_BASE_URL: /api/workflows
+          VITE_WS_BASE_URL: /ws
+          VITE_AWS_REGION: us-east-1
+          VITE_COGNITO_USER_POOL_ID: ${{ vars.COGNITO_USER_POOL_ID }}
+          VITE_COGNITO_USER_POOL_CLIENT_ID: ${{ vars.COGNITO_USER_POOL_CLIENT_ID }}
         run: npm run build
 
-      - name: Configure AWS credentials with GitHub OIDC
-        uses: aws-actions/configure-aws-credentials@v6.2.3
+      - name: Configure AWS credentials with OIDC
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: us-east-1
 
-      - name: Upload static files to S3
-        run: aws s3 sync dist/ "s3://${{ vars.FRONTEND_BUCKET }}" --delete
+      - name: Upload immutable assets
+        run: aws s3 sync dist/assets/ s3://${{ vars.FRONTEND_BUCKET }}/assets/ --delete --cache-control "public,max-age=31536000,immutable"
 
-      - name: Invalidate CloudFront HTML
-        run: |
-          aws cloudfront create-invalidation \
-            --distribution-id "${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}" \
-            --paths "/index.html" "/"
+      - name: Upload application shell
+        run: aws s3 cp dist/index.html s3://${{ vars.FRONTEND_BUCKET }}/index.html --cache-control "no-cache,no-store,must-revalidate" --content-type "text/html"
+
+      - name: Upload remaining public files
+        run: aws s3 sync dist/ s3://${{ vars.FRONTEND_BUCKET }}/ --exclude "assets/*" --exclude "index.html" --delete
+
+      - name: Invalidate CloudFront entry points
+        run: aws cloudfront create-invalidation --distribution-id ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/" "/index.html"

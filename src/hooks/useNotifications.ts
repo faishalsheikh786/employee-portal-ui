@@ -1,31 +1,35 @@
 import { useEffect, useState } from 'react'
-import type { NotificationMessage } from '../types'
+import { appConfig } from '../config'
+import type { RealtimeNotification } from '../types'
 
-function getWebSocketBase(): string {
-  const configured = import.meta.env.VITE_WS_BASE_URL
-  if (configured) return configured
-
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-  return `${protocol}//${window.location.host}/ws`
-}
-
-export function useNotifications(employeeId: number) {
-  const [notifications, setNotifications] = useState<NotificationMessage[]>([])
+export function useNotifications(employeeId?: number) {
+  const [latest, setLatest] = useState<RealtimeNotification | null>(null)
   const [connected, setConnected] = useState(false)
 
   useEffect(() => {
-    const socket = new WebSocket(`${getWebSocketBase()}/notifications/${employeeId}`)
+    if (!employeeId) return
 
+    const socket = new WebSocket(`${appConfig.wsBase}/notifications/${employeeId}`)
     socket.onopen = () => setConnected(true)
     socket.onclose = () => setConnected(false)
     socket.onerror = () => setConnected(false)
     socket.onmessage = (event) => {
-      const message = JSON.parse(event.data) as NotificationMessage
-      setNotifications((current) => [message, ...current].slice(0, 10))
+      try {
+        setLatest(JSON.parse(event.data) as RealtimeNotification)
+      } catch {
+        setLatest({ type: 'MESSAGE', message: String(event.data) })
+      }
     }
 
-    return () => socket.close()
+    const keepAlive = window.setInterval(() => {
+      if (socket.readyState === WebSocket.OPEN) socket.send('ping')
+    }, 25000)
+
+    return () => {
+      window.clearInterval(keepAlive)
+      socket.close()
+    }
   }, [employeeId])
 
-  return { notifications, connected }
+  return { latest, connected, clear: () => setLatest(null) }
 }
