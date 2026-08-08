@@ -24,10 +24,18 @@ export function LeavePage() {
     } catch (e) { setError((e as Error).message) }
   }
 
-  return <>
-    <PageHeader title="Leave Requests" subtitle="Submit and track your time-off requests." action={<Button variant="contained" startIcon={<Add />} onClick={() => setOpen(true)}>New request</Button>} />
-    {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-    <Card variant="outlined"><CardContent sx={{ p: 0 }}><TableContainer><Table><TableHead><TableRow><TableCell>Type</TableCell><TableCell>Dates</TableCell><TableCell>Reason</TableCell><TableCell>Status</TableCell></TableRow></TableHead><TableBody>{leaves.map((leave) => <TableRow key={leave.id}><TableCell>{leave.leave_type}</TableCell><TableCell>{leave.start_date} → {leave.end_date}</TableCell><TableCell>{leave.reason}</TableCell><TableCell><StatusChip status={leave.status} /></TableCell></TableRow>)}</TableBody></Table></TableContainer></CardContent></Card>
-    <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm"><DialogTitle>New leave request</DialogTitle><DialogContent><Stack spacing={2} mt={1}><TextField select label="Leave type" value={form.leave_type} onChange={(e) => setForm({ ...form, leave_type: e.target.value })}><MenuItem value="VACATION">Vacation</MenuItem><MenuItem value="SICK">Sick</MenuItem><MenuItem value="PERSONAL">Personal</MenuItem></TextField><TextField type="date" label="Start date" InputLabelProps={{ shrink: true }} value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} /><TextField type="date" label="End date" InputLabelProps={{ shrink: true }} value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} /><TextField label="Reason" multiline rows={3} value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} /></Stack></DialogContent><DialogActions><Button onClick={() => setOpen(false)}>Cancel</Button><Button variant="contained" onClick={submit} disabled={!form.start_date || !form.end_date || !form.reason}>Submit</Button></DialogActions></Dialog>
-  </>
+  return (
+    <>
+      <PageHeader title="Leave Requests" subtitle="Submit and track your time-off requests." action={<Button variant="contained" startIcon={<Add />} onClick={() => setOpen(true)}>New request</Button>} />
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      <Card variant="outlined"><CardContent sx={{ p: 0 }}><TableContainer><Table><TableHead><TableRow><TableCell>Type</TableCell><TableCell>Dates</TableCell><TableCell>Reason</TableCell><TableCell>Status</TableCell></TableRow></TableHead><TableBody>{leaves.map((leave) => <TableRow key={leave.id}><TableCell>{leave.leave_type}</TableCell><TableCell>{leave.start_date} → {leave.end_date}</TableCell><TableCell>{leave.reason}</TableCell><TableCell><StatusChip status={leave.status} /></TableCell></TableRow>)}</TableBody></Table></TableContainer></CardContent></Card>
+      <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm"><DialogTitle>New leave request</DialogTitle><DialogContent><Stack spacing={2} sx={{
+        mt: 1
+      }}><TextField select label="Leave type" value={form.leave_type} onChange={(e) => setForm({ ...form, leave_type: e.target.value })}><MenuItem value="VACATION">Vacation</MenuItem><MenuItem value="SICK">Sick</MenuItem><MenuItem value="PERSONAL">Personal</MenuItem></TextField><TextField type="date" label="Start date" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} slotProps={{
+        inputLabel: { shrink: true }
+      }} /><TextField type="date" label="End date" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} slotProps={{
+        inputLabel: { shrink: true }
+      }} /><TextField label="Reason" multiline rows={3} value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} /></Stack></DialogContent><DialogActions><Button onClick={() => setOpen(false)}>Cancel</Button><Button variant="contained" onClick={submit} disabled={!form.start_date || !form.end_date || !form.reason}>Submit</Button></DialogActions></Dialog>
+    </>
+  );
 }

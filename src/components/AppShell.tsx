@@ -80,10 +80,21 @@ export function AppShell() {
   if (!user) return null
 
   const drawer = <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', color: 'white', background: 'linear-gradient(180deg,#152A54 0%,#10213F 58%,#0A172D 100%)' }}>
-    <Box px={2.5} pt={3} pb={2.5}>
-      <Stack direction="row" spacing={1.4} alignItems="center">
+    <Box
+      sx={{
+        px: 2.5,
+        pt: 3,
+        pb: 2.5
+      }}>
+      <Stack direction="row" spacing={1.4} sx={{
+        alignItems: "center"
+      }}>
         <Box sx={{ width: 42, height: 42, display: 'grid', placeItems: 'center', borderRadius: 2.2, bgcolor: 'rgba(255,255,255,.12)', border: '1px solid rgba(255,255,255,.14)' }}><Apartment /></Box>
-        <Box><Typography fontWeight={900} fontSize={18}>Employee Ops</Typography><Typography variant="caption" sx={{ color: 'rgba(255,255,255,.6)' }}>Corporate Workspace</Typography></Box>
+        <Box><Typography
+          sx={{
+            fontWeight: 900,
+            fontSize: 18
+          }}>Employee Ops</Typography><Typography variant="caption" sx={{ color: 'rgba(255,255,255,.6)' }}>Corporate Workspace</Typography></Box>
       </Stack>
     </Box>
     <Divider sx={{ borderColor: 'rgba(255,255,255,.09)' }} />
@@ -91,16 +102,40 @@ export function AppShell() {
     <List sx={{ px: 1.4, pt: .5 }}>
       {navItems.map((item) => {
         const active = location.pathname === item.path
-        return <ListItemButton key={item.path} component={Link} to={item.path} onClick={() => setMobileOpen(false)} selected={active} sx={{ borderRadius: 2.5, mb: .55, minHeight: 46, color: active ? '#fff' : 'rgba(255,255,255,.72)', '& .MuiListItemIcon-root': { color: 'inherit', minWidth: 40 }, '&.Mui-selected': { bgcolor: 'rgba(104,132,255,.22)', boxShadow: 'inset 3px 0 0 #8DA0FF' }, '&.Mui-selected:hover': { bgcolor: 'rgba(104,132,255,.27)' }, '&:hover': { bgcolor: 'rgba(255,255,255,.07)', color: '#fff' } }}>
-          <ListItemIcon>{item.icon}</ListItemIcon><ListItemText primary={item.label} primaryTypographyProps={{ fontSize: 14, fontWeight: active ? 800 : 600 }} />
-        </ListItemButton>
+        return (
+          <ListItemButton key={item.path} component={Link} to={item.path} onClick={() => setMobileOpen(false)} selected={active} sx={{ borderRadius: 2.5, mb: .55, minHeight: 46, color: active ? '#fff' : 'rgba(255,255,255,.72)', '& .MuiListItemIcon-root': { color: 'inherit', minWidth: 40 }, '&.Mui-selected': { bgcolor: 'rgba(104,132,255,.22)', boxShadow: 'inset 3px 0 0 #8DA0FF' }, '&.Mui-selected:hover': { bgcolor: 'rgba(104,132,255,.27)' }, '&:hover': { bgcolor: 'rgba(255,255,255,.07)', color: '#fff' } }}>
+            <ListItemIcon>{item.icon}</ListItemIcon><ListItemText
+              primary={item.label}
+              slotProps={{
+                primary: {
+                  sx: {
+                    fontSize: 14,
+                    fontWeight: active ? 800 : 600,
+                  },
+                },
+              }}
+            />
+          </ListItemButton>
+        );
       })}
     </List>
-    <Box mt="auto" p={1.7}>
+    <Box
+      sx={{
+        mt: "auto",
+        p: 1.7
+      }}>
       <Box sx={{ bgcolor: 'rgba(255,255,255,.07)', border: '1px solid rgba(255,255,255,.09)', p: 1.6, borderRadius: 3 }}>
-        <Stack direction="row" spacing={1.2} alignItems="center">
+        <Stack direction="row" spacing={1.2} sx={{
+          alignItems: "center"
+        }}>
           <Avatar sx={{ width: 38, height: 38, bgcolor: '#6078E8', fontWeight: 800 }}>{user.name.charAt(0).toUpperCase()}</Avatar>
-          <Box minWidth={0} flex={1}><Typography variant="body2" fontWeight={800} noWrap>{user.name}</Typography><Typography variant="caption" sx={{ color: 'rgba(255,255,255,.57)' }}>{user.role}</Typography></Box>
+          <Box
+            sx={{
+              minWidth: 0,
+              flex: 1
+            }}><Typography variant="body2" noWrap sx={{
+            fontWeight: 800
+          }}>{user.name}</Typography><Typography variant="caption" sx={{ color: 'rgba(255,255,255,.57)' }}>{user.role}</Typography></Box>
           <Tooltip title="Sign out"><IconButton size="small" sx={{ color: 'rgba(255,255,255,.8)' }} onClick={() => void logout().then(() => navigate('/login'))}><Logout fontSize="small" /></IconButton></Tooltip>
         </Stack>
       </Box>
@@ -117,11 +152,25 @@ export function AppShell() {
         <AppBar position="sticky" elevation={0} color="inherit" sx={{ borderBottom: '1px solid', borderColor: 'divider', bgcolor: 'rgba(255,255,255,.88)', backdropFilter: 'blur(18px)' }}>
           <Toolbar sx={{ minHeight: { xs: 64, md: 72 }, gap: 1.2 }}>
             {!desktop && <IconButton edge="start" onClick={() => setMobileOpen(true)}><MenuIcon /></IconButton>}
-            <Box minWidth={0} flex={1}>
-              <Typography fontWeight={800} noWrap>{user.title}</Typography>
-              <Typography variant="caption" color="text.secondary" noWrap display="block">{user.email}</Typography>
+            <Box
+              sx={{
+                minWidth: 0,
+                flex: 1
+              }}>
+              <Typography noWrap sx={{
+                fontWeight: 800
+              }}>{user.title}</Typography>
+              <Typography
+                variant="caption"
+                noWrap
+                sx={{
+                  color: "text.secondary",
+                  display: "block"
+                }}>{user.email}</Typography>
             </Box>
-            <Stack direction="row" alignItems="center" spacing={{ xs: .5, sm: 1.2 }}>
+            <Stack direction="row" spacing={{ xs: .5, sm: 1.2 }} sx={{
+              alignItems: "center"
+            }}>
               <Chip size="small" label={realtime.connected ? 'Live' : 'Offline'} color={realtime.connected ? 'success' : 'default'} variant="outlined" sx={{ display: { xs: 'none', sm: 'inline-flex' } }} />
               <Tooltip title="Notifications"><IconButton><Badge color="error" variant={realtime.latest ? 'dot' : 'standard'}><Notifications /></Badge></IconButton></Tooltip>
               <Chip label={user.role} size="small" color={user.role === 'ADMIN' ? 'secondary' : 'primary'} variant="outlined" sx={{ display: { xs: 'none', md: 'inline-flex' } }} />
@@ -139,5 +188,5 @@ export function AppShell() {
 
       <Snackbar open={Boolean(realtime.latest)} autoHideDuration={6000} onClose={realtime.clear} message={realtime.latest?.message || ''} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} />
     </Box>
-  )
+  );
 }
